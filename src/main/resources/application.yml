@@ -1,0 +1,140 @@
+# Default/shared configuration
+relay:
+  node-name: ${HOSTNAME:relay-dev-01}
+  
+  sources:
+    - id: trading_system
+      path: ${TRADING_FEED_PATH:./test-data/trading}
+      file-pattern: "*.csv"
+      ready-strategy: DONE_FILE
+      done-file-suffix: .done
+      poll-interval: 10s
+      enabled: true
+
+    - id: risk_system
+      path: ${RISK_FEED_PATH:./test-data/risk}
+      file-pattern: "RISK_*.xml"
+      ready-strategy: FILE_AGE
+      poll-interval: 15s
+      enabled: true
+
+  gcs:
+    bucket: ${GCS_BUCKET:surveillance-data-lake}
+    project-id: ${GCP_PROJECT:lbg-surveillance-dev}
+    upload-buffer-size: 8388608
+    upload-timeout: 30m
+
+  monitoring:
+    big-query-dataset: relay_monitoring
+    events-table: transfer_events
+    reprocess-table: reprocess_requests
+    heartbeat-interval: 60s
+
+quarkus:
+  log:
+    category:
+      "com.lbg.markets.surveillance":
+        level: INFO
+    console:
+      format: "%d{HH:mm:ss} %-5p [%c{2.}] (%t) %s%e%n"
+
+  scheduler:
+    enabled: true
+
+  flyway:
+    migrate-at-start: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+---
+# Development Profile (H2)
+"%dev":
+  quarkus:
+    datasource:
+      db-kind: h2
+      jdbc:
+        url: jdbc:h2:file:./target/relay-db;DB_CLOSE_DELAY=-1;MODE=MSSQLServer
+        driver: org.h2.Driver
+        max-size: 5
+
+    hibernate-orm:
+      dialect: org.hibernate.dialect.H2Dialect
+      database:
+        generation: drop-and-create  # For dev convenience
+      log:
+        sql: true  # Show SQL in dev
+
+    flyway:
+      migrate-at-start: false  # Let Hibernate handle schema in dev
+
+    # Dev services for local testing
+    http:
+      port: 8080
+      test-port: 8081
+
+  relay:
+    # Override paths for local development
+    sources:
+      - id: trading_system
+        path: ./test-data/trading
+        file-pattern: "*.csv"
+        ready-strategy: IMMEDIATE  # Simplify for dev
+        poll-interval: 5s
+        enabled: true
+
+      - id: risk_system
+        path: ./test-data/risk
+        file-pattern: "*.xml"
+        ready-strategy: IMMEDIATE
+        poll-interval: 5s
+        enabled: true
+    
+    # Use local emulator or test bucket for dev
+    gcs:
+      bucket: relay-test-bucket
+      project-id: test-project
+      emulator-host: ${GCS_EMULATOR_HOST:localhost:8089}  # For fake-gcs-server
+
+---
+# Test Profile (H2 in-memory)
+"%test":
+  quarkus:
+    datasource:
+      db-kind: h2
+      jdbc:
+        url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=MSSQLServer
+        driver: org.h2.Driver
+
+    hibernate-orm:
+      dialect: org.hibernate.dialect.H2Dialect
+      database:
+        generation: drop-and-create
+
+    flyway:
+      migrate-at-start: false
+
+---
+# Production Profile (SQL Server)
+"%prod":
+  quarkus:
+    datasource:
+      db-kind: mssql
+      jdbc:
+        url: jdbc:sqlserver://${DB_HOST:sqlserver-ha.lbg.local}:1433;databaseName=${DB_NAME:relay};encrypt=true;trustServerCertificate=true
+        driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+        min-size: 5
+        max-size: 20
+        acquisition-timeout: 10
+        leak-detection-interval: 2M
+        idle-removal-interval: 5M
+        max-lifetime: 30M
+        transaction-isolation-level: read-committed
+
+    hibernate-orm:
+      dialect: org.hibernate.dialect.SQLServer2016Dialect
+      database:
+        generation: validate  # Never auto-generate in prod
+
+    flyway:
+      migrate-at-start: true
+      locations: classpath:db/migration/common,classpath:db/migration/sqlserver
