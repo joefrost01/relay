@@ -3,7 +3,7 @@ package com.lbg.markets.surveillance.relay.model;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.transaction.Transactional;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;

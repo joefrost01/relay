@@ -46,4 +46,18 @@ public interface RelayConfiguration {
         String reprocessTable();
         Duration heartbeatInterval();
     }
+
+    interface SlaConfig {
+        Duration gracePeriod();
+    }
+
+    interface ArchiveConfig {
+        boolean enabled();
+        String path();
+        ArchiveStrategy strategy();
+
+        enum ArchiveStrategy {
+            MOVE, COPY, COPY_THEN_DELETE
+        }
+    }
 }

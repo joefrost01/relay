@@ -1,6 +1,14 @@
 package com.lbg.markets.surveillance.relay.model;
 
+import java.time.Instant;
 import java.util.List;
+
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import jakarta.persistence.*;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 /**
  * Status transition record for audit trail.

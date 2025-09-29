@@ -16,10 +16,10 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.file.GenericFile;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
