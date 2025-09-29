@@ -9,5 +9,7 @@ public interface FileTransferRepository {
     List<FileTransfer> findPendingTransfers(int limit);
     FileTransfer registerFileIfNew(String sourceSystem, String filename,
                                    String filePath, Long fileSize, String fileHash);
+
+    FileTransfer findById(Long id);
 }
 

@@ -21,6 +21,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.eclipse.microprofile.health.HealthCheckResponse;
+import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
+
+
 /**
  * Database health check for SQL Server / H2.
  * Provides both liveness and readiness probes with detailed metrics.

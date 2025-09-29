@@ -14,8 +14,8 @@ import java.util.List;
 @ApplicationScoped
 @IfBuildProfile("dev")  // H2 implementation for development
 public class H2FileTransferRepository
-        extends PanacheRepository<FileTransfer>
-        implements FileTransferRepository {
+        implements PanacheRepository<FileTransfer>,
+         FileTransferRepository {
 
     @ConfigProperty(name = "relay.node-name")
     String nodeName;

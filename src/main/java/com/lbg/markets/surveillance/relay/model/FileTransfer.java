@@ -1,6 +1,6 @@
 package com.lbg.markets.surveillance.relay.model;
 
-import com.google.cloud.storage.transfermanager.TransferStatus;
+import com.lbg.markets.surveillance.relay.model.TransferStatus;
 import io.quarkus.Generated;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Column;

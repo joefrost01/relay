@@ -15,7 +15,7 @@ import jakarta.transaction.Transactional;
  */
 @Entity
 @Table(name = "transfer_status_history")
-class TransferStatusHistory extends PanacheEntity {
+public class TransferStatusHistory extends PanacheEntity {
 
     @Column(name = "transfer_id", nullable = false)
     public Long transferId;

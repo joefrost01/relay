@@ -30,6 +30,10 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+
+import io.micrometer.core.instrument.binder.jvm.*;
+import java.lang.management.ManagementFactory;
+
 /**
  * Centralized monitoring service for the Relay application.
  * Handles metrics collection, event logging, BigQuery export, and alerting.
