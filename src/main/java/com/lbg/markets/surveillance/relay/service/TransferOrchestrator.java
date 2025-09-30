@@ -602,7 +602,7 @@ public class TransferOrchestrator {
     private void performValidation(FileTransfer transfer) throws ValidationException {
         updateTransferStatus(transfer, TransferStatus.VALIDATING, "Performing validation");
 
-        ValidationResult result = validationService.validateFile(
+        FileValidationService.ValidationResult result = validationService.validateFile(
                 transfer.sourceSystem,
                 Paths.get(transfer.filePath)
         );
