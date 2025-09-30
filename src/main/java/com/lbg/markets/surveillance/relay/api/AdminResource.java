@@ -270,6 +270,7 @@ public class AdminResource {
         Map<String, Long> statusCounts = FileTransfer.find(
                         "createdAt >= ?1 and createdAt <= ?2", fromDate, toDate)
                 .stream()
+                .map(t->(FileTransfer) t)
                 .collect(Collectors.groupingBy(
                         t -> t.status.toString(),
                         Collectors.counting()
@@ -279,6 +280,7 @@ public class AdminResource {
         Map<String, Long> sourceCounts = FileTransfer.find(
                         "createdAt >= ?1 and createdAt <= ?2", fromDate, toDate)
                 .stream()
+                .map(t->(FileTransfer) t)
                 .collect(Collectors.groupingBy(
                         t -> t.sourceSystem,
                         Collectors.counting()

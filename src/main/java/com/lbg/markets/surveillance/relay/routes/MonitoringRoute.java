@@ -8,6 +8,7 @@ import com.lbg.markets.surveillance.relay.model.TransferStatus;
 import com.lbg.markets.surveillance.relay.service.MonitoringService;
 import io.micrometer.core.instrument.*;
 import io.quarkus.logging.Log;
+import io.quarkus.panache.common.Sort;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
@@ -17,6 +18,8 @@ import io.micrometer.core.instrument.Timer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+
+import java.lang.management.ManagementFactory;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -172,6 +175,7 @@ public class MonitoringRoute extends RouteBuilder {
                     Map<String, Long> statusCounts = FileTransfer.stream(
                                     "createdAt > ?1",
                                     Instant.now().minus(Duration.ofMinutes(5)))
+                            .map(t->(FileTransfer) t)
                             .collect(Collectors.groupingBy(
                                     t -> t.status.toString(),
                                     Collectors.counting()
@@ -455,6 +459,7 @@ public class MonitoringRoute extends RouteBuilder {
                                     "status = ?1 and completedAt > ?2",
                                     TransferStatus.COMPLETED, oneMinuteAgo)
                             .stream()
+                            .map(t->(FileTransfer) t)
                             .mapToLong(t -> t.fileSize != null ? t.fileSize : 0)
                             .sum();
 
@@ -841,6 +846,7 @@ public class MonitoringRoute extends RouteBuilder {
                 .page(0, limit)
                 .list()
                 .stream()
+                .map(t->(FileTransfer) t)
                 .map(t -> Map.<String, Object>of(
                         "id", t.id,
                         "file", t.filename,

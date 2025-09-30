@@ -10,6 +10,6 @@ public interface FileTransferRepository {
     FileTransfer registerFileIfNew(String sourceSystem, String filename,
                                    String filePath, Long fileSize, String fileHash);
 
-    //FileTransfer findById(Long id);
+    FileTransfer findById(Long id);
 }
 

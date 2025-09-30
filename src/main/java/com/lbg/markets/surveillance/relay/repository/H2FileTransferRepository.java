@@ -73,4 +73,9 @@ public class H2FileTransferRepository implements PanacheRepository<FileTransfer>
         }
         return null;
     }
+
+    @Override
+    public FileTransfer findById(Long id) {
+        return FileTransfer.findById(id);
+    }
 }

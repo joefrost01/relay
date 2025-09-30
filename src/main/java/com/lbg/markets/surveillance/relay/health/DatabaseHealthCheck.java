@@ -395,7 +395,7 @@ public class DatabaseHealthCheck implements HealthCheck {
             health.put("pool_available_connections", metrics.availableCount());
             health.put("pool_max_used", metrics.maxUsedCount());
             health.put("pool_await_count", metrics.awaitingCount());
-            health.put("pool_create_count", metrics.createCount());
+            health.put("pool_create_count", metrics.creationCount());
             health.put("pool_destroy_count", metrics.destroyCount());
 
             // Check if pool is exhausted
@@ -404,7 +404,7 @@ public class DatabaseHealthCheck implements HealthCheck {
             }
 
             // Check for connection leaks (high destroy count)
-            if (metrics.destroyCount() > metrics.createCount() * 0.1) {
+            if (metrics.destroyCount() > metrics.creationCount() * 0.1) {
                 warnings.add("Possible connection leak - high destroy count: " + metrics.destroyCount());
             }
 

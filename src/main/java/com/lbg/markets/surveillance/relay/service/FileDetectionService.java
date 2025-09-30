@@ -115,7 +115,7 @@ public class FileDetectionService {
         }
     }
 
-    private String calculateHash(Path file) throws IOException {
+    public String calculateHash(Path file) throws IOException {
         try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), "r")) {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] buffer = new byte[1024 * 1024];

@@ -77,7 +77,11 @@ public class SqlServerFileTransferRepository implements PanacheRepository<FileTr
     @Transactional
     public FileTransfer registerFileIfNew(String sourceSystem, String filename,
                                           String filePath, Long fileSize, String fileHash) {
-        // SQL Server MERGE implementation
-        // ... (as before)
+        return null;
+    }
+
+    @Override
+    public FileTransfer findById(Long id) {
+        return FileTransfer.findById(id);
     }
 }
