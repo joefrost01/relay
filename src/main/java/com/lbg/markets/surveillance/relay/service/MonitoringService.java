@@ -217,23 +217,6 @@ public class MonitoringService {
     }
 
     /**
-     * Record processing progress.
-     */
-    public void recordProgress(Long transferId, long bytesProcessed, Long totalBytes) {
-        Map<String, Object> progressData = new HashMap<>();
-        progressData.put("transfer_id", transferId);
-        progressData.put("bytes_processed", bytesProcessed);
-        progressData.put("total_bytes", totalBytes);
-
-        if (totalBytes != null && totalBytes > 0) {
-            double percentage = (double) bytesProcessed / totalBytes * 100;
-            progressData.put("percentage", percentage);
-        }
-
-        recordEvent("transfer_progress", progressData);
-    }
-
-    /**
      * Get current metrics snapshot.
      */
     public MetricsSnapshot getMetricsSnapshot() {
@@ -828,44 +811,4 @@ public class MonitoringService {
         public Map<String, Object> statistics;
     }
 
-    /**
-     * Transfer statistics.
-     */
-    public static class TransferStatistics {
-        public Duration period;
-        public Instant startTime;
-        public Instant endTime;
-        public Map<TransferStatus, Long> byStatus;
-        public Map<String, Long> bySource;
-        public double successRate;
-        public long totalBytesTransferred;
-        public double throughputMBps;
-        public double avgProcessingTimeMs;
-        public long minProcessingTimeMs;
-        public long maxProcessingTimeMs;
-    }
-
-    /**
-     * SLA report.
-     */
-    public static class SlaReport {
-        public LocalDate date;
-        public String node;
-        public double overallSlaCompliance;
-        public Map<String, SlaStatus> sourceSlaStatus;
-    }
-
-    /**
-     * SLA status for a source.
-     */
-    public static class SlaStatus {
-        public String sourceSystem;
-        public Instant expectedTime;
-        public Instant actualTime;
-        public long delayMinutes;
-        public boolean metSla;
-        public long filesProcessed;
-        public long filesFailed;
-        public double successRate;
-    }
 }
