@@ -1,15 +1,8 @@
 package com.lbg.markets.surveillance.relay.model;
-import jakarta.persistence.GenerationType;
 
-import io.quarkus.Generated;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.PrePersist;
-
-
 import jakarta.persistence.*;
+
 import java.time.Instant;
 import java.util.Optional;
 
@@ -18,15 +11,15 @@ import java.util.Optional;
 @NamedNativeQuery(
         name = "FileTransfer.tryAcquireLock",
         query = """
-        UPDATE file_transfers 
-        SET status = :status, 
-            processing_node = :node, 
-            started_at = GETUTCDATE()
-        OUTPUT INSERTED.id
-        WHERE id = :id 
-          AND status = 'DETECTED'
-          AND row_version = :version
-        """
+                UPDATE file_transfers 
+                SET status = :status, 
+                    processing_node = :node, 
+                    started_at = GETUTCDATE()
+                OUTPUT INSERTED.id
+                WHERE id = :id 
+                  AND status = 'DETECTED'
+                  AND row_version = :version
+                """
 )
 public class FileTransfer extends PanacheEntity {
 

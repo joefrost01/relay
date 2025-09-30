@@ -1,23 +1,23 @@
 package com.lbg.markets.surveillance.relay.api;
 
+import com.lbg.markets.surveillance.relay.config.RelayConfiguration;
 import com.lbg.markets.surveillance.relay.model.FileTransfer;
 import com.lbg.markets.surveillance.relay.model.TransferStatus;
 import com.lbg.markets.surveillance.relay.repository.FileTransferRepository;
+import com.lbg.markets.surveillance.relay.service.FileDetectionService;
 import com.lbg.markets.surveillance.relay.service.MonitoringService;
 import com.lbg.markets.surveillance.relay.service.TransferOrchestrator;
-import com.lbg.markets.surveillance.relay.service.FileDetectionService;
-import com.lbg.markets.surveillance.relay.config.RelayConfiguration;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -32,11 +32,16 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class AdminResource {
 
-    @Inject FileTransferRepository repository;
-    @Inject MonitoringService monitoring;
-    @Inject TransferOrchestrator orchestrator;
-    @Inject FileDetectionService detectionService;
-    @Inject RelayConfiguration config;
+    @Inject
+    FileTransferRepository repository;
+    @Inject
+    MonitoringService monitoring;
+    @Inject
+    TransferOrchestrator orchestrator;
+    @Inject
+    FileDetectionService detectionService;
+    @Inject
+    RelayConfiguration config;
 
     @ConfigProperty(name = "relay.node-name")
     String nodeName;
@@ -270,7 +275,7 @@ public class AdminResource {
         Map<String, Long> statusCounts = FileTransfer.find(
                         "createdAt >= ?1 and createdAt <= ?2", fromDate, toDate)
                 .stream()
-                .map(t->(FileTransfer) t)
+                .map(t -> (FileTransfer) t)
                 .collect(Collectors.groupingBy(
                         t -> t.status.toString(),
                         Collectors.counting()
@@ -280,7 +285,7 @@ public class AdminResource {
         Map<String, Long> sourceCounts = FileTransfer.find(
                         "createdAt >= ?1 and createdAt <= ?2", fromDate, toDate)
                 .stream()
-                .map(t->(FileTransfer) t)
+                .map(t -> (FileTransfer) t)
                 .collect(Collectors.groupingBy(
                         t -> t.sourceSystem,
                         Collectors.counting()
@@ -362,7 +367,7 @@ public class AdminResource {
                             source.id(), TransferStatus.FAILED
                     );
 
-                    return Map.<String, Object>of(
+                    return Map.of(
                             "id", source.id(),
                             "path", source.path(),
                             "filePattern", source.filePattern(),

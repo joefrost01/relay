@@ -2,6 +2,7 @@ package com.lbg.markets.surveillance.relay.model;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -259,9 +260,7 @@ public enum TransferStatus {
                     DELETED, REPROCESS_REQUESTED
             ).contains(newStatus);
 
-            case DELETED -> Set.of(
-                    REPROCESS_REQUESTED
-            ).contains(newStatus);
+            case DELETED -> Objects.equals(REPROCESS_REQUESTED, newStatus);
 
             case HOLD -> Set.of(
                     QUEUED, PROCESSING, CANCELLED,

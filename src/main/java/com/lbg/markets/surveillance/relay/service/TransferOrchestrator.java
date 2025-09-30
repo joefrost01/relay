@@ -11,26 +11,28 @@ import io.micrometer.core.instrument.Timer;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.Startup;
 import io.quarkus.scheduler.Scheduled;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-import org.eclipse.microprofile.faulttolerance.Retry;
-import org.eclipse.microprofile.faulttolerance.Timeout;
-
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.faulttolerance.Retry;
+import org.eclipse.microprofile.faulttolerance.Timeout;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -44,12 +46,18 @@ import java.util.stream.Collectors;
 @Startup
 public class TransferOrchestrator {
 
-    @Inject FileTransferRepository repository;
-    @Inject GcsStreamingService gcsService;
-    @Inject FileValidationService validationService;
-    @Inject MonitoringService monitoringService;
-    @Inject RelayConfiguration config;
-    @Inject MeterRegistry meterRegistry;
+    @Inject
+    FileTransferRepository repository;
+    @Inject
+    GcsStreamingService gcsService;
+    @Inject
+    FileValidationService validationService;
+    @Inject
+    MonitoringService monitoringService;
+    @Inject
+    RelayConfiguration config;
+    @Inject
+    MeterRegistry meterRegistry;
 
     @ConfigProperty(name = "relay.node-name")
     String nodeName;
@@ -916,14 +924,11 @@ public class TransferOrchestrator {
         }
 
         // Don't retry if file not found
-        if (error instanceof IOException &&
-                error.getMessage() != null &&
-                error.getMessage().contains("not found")) {
-            return false;
-        }
+        return !(error instanceof IOException) ||
+                error.getMessage() == null ||
+                !error.getMessage().contains("not found");
 
         // Retry most other errors
-        return true;
     }
 
     private void updateSourceStatistics(String sourceSystem, boolean success, Duration duration) {

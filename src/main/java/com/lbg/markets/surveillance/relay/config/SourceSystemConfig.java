@@ -3,11 +3,12 @@ package com.lbg.markets.surveillance.relay.config;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithName;
+
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Configuration for individual source systems that provide files to relay.

@@ -5,26 +5,28 @@ import com.google.cloud.storage.*;
 import com.lbg.markets.surveillance.relay.config.GcsConfig;
 import com.lbg.markets.surveillance.relay.model.FileTransfer;
 import io.quarkus.logging.Log;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class GcsStreamingService {
 
-    @Inject GcsConfig config;
-    @Inject MonitoringService monitoring;
+    @Inject
+    GcsConfig config;
+    @Inject
+    MonitoringService monitoring;
 
     @ConfigProperty(name = "relay.node-name")
     String nodeName;

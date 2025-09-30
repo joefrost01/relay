@@ -2,41 +2,37 @@ package com.lbg.markets.surveillance.relay.service;
 
 import com.google.cloud.bigquery.*;
 import com.google.cloud.pubsub.v1.Publisher;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.TopicName;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.lbg.markets.surveillance.relay.config.RelayConfiguration;
-import com.lbg.markets.surveillance.relay.model.FileTransfer;
-import com.lbg.markets.surveillance.relay.model.SourceSystem;
 import com.lbg.markets.surveillance.relay.model.TransferStatus;
 import io.micrometer.core.instrument.*;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.Startup;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-
-
-import io.micrometer.core.instrument.binder.jvm.*;
-import java.lang.management.ManagementFactory;
 
 /**
  * Centralized monitoring service for the Relay application.
@@ -46,9 +42,12 @@ import java.lang.management.ManagementFactory;
 @Startup
 public class MonitoringService {
 
-    @Inject RelayConfiguration config;
-    @Inject MeterRegistry meterRegistry;
-    @Inject BigQuery bigQuery;
+    @Inject
+    RelayConfiguration config;
+    @Inject
+    MeterRegistry meterRegistry;
+    @Inject
+    BigQuery bigQuery;
 
     @ConfigProperty(name = "relay.node-name")
     String nodeName;

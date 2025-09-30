@@ -2,13 +2,13 @@ package com.lbg.markets.surveillance.relay.service;
 
 import com.lbg.markets.surveillance.relay.config.RelayConfiguration;
 import com.lbg.markets.surveillance.relay.model.FileTransfer;
-import com.lbg.markets.surveillance.relay.model.TransferStatus;
 import com.lbg.markets.surveillance.relay.repository.FileTransferRepository;
 import io.quarkus.logging.Log;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -25,9 +25,12 @@ import java.util.UUID;
 @ApplicationScoped
 public class FileDetectionService {
 
-    @Inject RelayConfiguration config;
-    @Inject FileTransferRepository repository;
-    @Inject MonitoringService monitoring;
+    @Inject
+    RelayConfiguration config;
+    @Inject
+    FileTransferRepository repository;
+    @Inject
+    MonitoringService monitoring;
 
     @ConfigProperty(name = "relay.node-name")
     String nodeName;

@@ -1,7 +1,6 @@
 package com.lbg.markets.surveillance.relay.routes;
 
 import com.lbg.markets.surveillance.relay.config.RelayConfiguration;
-import com.lbg.markets.surveillance.relay.config.SourceSystemConfig;
 import com.lbg.markets.surveillance.relay.model.FileTransfer;
 import com.lbg.markets.surveillance.relay.model.SourceSystem;
 import com.lbg.markets.surveillance.relay.model.TransferStatus;
