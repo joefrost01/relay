@@ -8,7 +8,7 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.TopicName;
 import com.lbg.markets.surveillance.relay.config.RelayConfiguration;
-import com.lbg.markets.surveillance.relay.model.TransferStatus;
+import com.lbg.markets.surveillance.relay.enums.TransferStatus;
 import io.micrometer.core.instrument.*;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;

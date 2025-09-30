@@ -1,4 +1,6 @@
-package com.lbg.markets.surveillance.relay.model;
+package com.lbg.markets.surveillance.relay.enums;
+
+import com.lbg.markets.surveillance.relay.exception.IllegalStateTransitionException;
 
 import java.util.Arrays;
 import java.util.List;

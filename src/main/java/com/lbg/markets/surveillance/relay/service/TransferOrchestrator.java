@@ -1,9 +1,9 @@
 package com.lbg.markets.surveillance.relay.service;
 
 import com.lbg.markets.surveillance.relay.config.RelayConfiguration;
+import com.lbg.markets.surveillance.relay.enums.TransferStatus;
 import com.lbg.markets.surveillance.relay.model.FileTransfer;
 import com.lbg.markets.surveillance.relay.model.SourceSystem;
-import com.lbg.markets.surveillance.relay.model.TransferStatus;
 import com.lbg.markets.surveillance.relay.model.TransferStatusHistory;
 import com.lbg.markets.surveillance.relay.repository.FileTransferRepository;
 import io.micrometer.core.instrument.MeterRegistry;

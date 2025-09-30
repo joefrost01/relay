@@ -1,9 +1,11 @@
-package com.lbg.markets.surveillance.relay.model;
+package com.lbg.markets.surveillance.relay.exception;
+
+import com.lbg.markets.surveillance.relay.enums.TransferStatus;
 
 /**
  * Exception thrown when an invalid status transition is attempted.
  */
-class IllegalStateTransitionException extends RuntimeException {
+public class IllegalStateTransitionException extends RuntimeException {
     private final TransferStatus fromStatus;
     private final TransferStatus toStatus;
 

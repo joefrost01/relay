@@ -1,9 +1,10 @@
 package com.lbg.markets.surveillance.relay.routes;
 
 import com.lbg.markets.surveillance.relay.config.RelayConfiguration;
+import com.lbg.markets.surveillance.relay.enums.TransferStatus;
 import com.lbg.markets.surveillance.relay.model.FileTransfer;
 import com.lbg.markets.surveillance.relay.model.SourceSystem;
-import com.lbg.markets.surveillance.relay.model.TransferStatus;
+import com.lbg.markets.surveillance.relay.repository.FileTransferRepository;
 import com.lbg.markets.surveillance.relay.service.FileDetectionService;
 import com.lbg.markets.surveillance.relay.service.MonitoringService;
 import com.lbg.markets.surveillance.relay.service.TransferOrchestrator;
@@ -47,6 +48,8 @@ public class FileIngestionRoute extends RouteBuilder {
     TransferOrchestrator orchestrator;
     @Inject
     MonitoringService monitoring;
+    @Inject
+    FileTransferRepository repository;
 
     @ConfigProperty(name = "relay.node-name")
     String nodeName;
@@ -533,7 +536,7 @@ public class FileIngestionRoute extends RouteBuilder {
      * Check if file has already been processed.
      */
     private boolean isAlreadyProcessed(String sourceSystem, String filename) {
-        return FileTransfer.findBySourceAndFilename(sourceSystem, filename).isPresent();
+        return repository.findBySourceAndFilename(sourceSystem, filename).isPresent();
     }
 
     /**

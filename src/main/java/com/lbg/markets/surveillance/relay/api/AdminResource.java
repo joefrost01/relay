@@ -1,8 +1,8 @@
 package com.lbg.markets.surveillance.relay.api;
 
 import com.lbg.markets.surveillance.relay.config.RelayConfiguration;
+import com.lbg.markets.surveillance.relay.enums.TransferStatus;
 import com.lbg.markets.surveillance.relay.model.FileTransfer;
-import com.lbg.markets.surveillance.relay.model.TransferStatus;
 import com.lbg.markets.surveillance.relay.repository.FileTransferRepository;
 import com.lbg.markets.surveillance.relay.service.FileDetectionService;
 import com.lbg.markets.surveillance.relay.service.MonitoringService;

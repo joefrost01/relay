@@ -1,5 +1,6 @@
 package com.lbg.markets.surveillance.relay.model;
 
+import com.lbg.markets.surveillance.relay.enums.TransferStatus;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
