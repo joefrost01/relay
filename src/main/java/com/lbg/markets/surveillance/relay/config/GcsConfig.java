@@ -322,5 +322,12 @@ public interface GcsConfig {
         @WithName("use-http2")
         @WithDefault("true")
         boolean useHttp2();
+
+        /**
+         * Node name for identifying which instance uploaded the file.
+         * Defaults to hostname or configured node name.
+         */
+        @WithName("node-name")
+        Optional<String> nodeName();
     }
 }

@@ -9,6 +9,9 @@ import com.lbg.markets.surveillance.relay.service.FileDetectionService;
 import com.lbg.markets.surveillance.relay.service.MonitoringService;
 import com.lbg.markets.surveillance.relay.service.TransferOrchestrator;
 import io.quarkus.logging.Log;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
@@ -16,10 +19,6 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.file.GenericFile;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,10 +40,14 @@ import static org.apache.camel.builder.endpoint.StaticEndpointBuilders.*;
 @ApplicationScoped
 public class FileIngestionRoute extends RouteBuilder {
 
-    @Inject RelayConfiguration config;
-    @Inject FileDetectionService detectionService;
-    @Inject TransferOrchestrator orchestrator;
-    @Inject MonitoringService monitoring;
+    @Inject
+    RelayConfiguration config;
+    @Inject
+    FileDetectionService detectionService;
+    @Inject
+    TransferOrchestrator orchestrator;
+    @Inject
+    MonitoringService monitoring;
 
     @ConfigProperty(name = "relay.node-name")
     String nodeName;
@@ -350,10 +353,12 @@ public class FileIngestionRoute extends RouteBuilder {
                 .process(exchange -> {
                     Log.info("Resetting daily statistics");
 
-                    SourceSystem.streamAll().forEach(source -> {
-                        source.resetDailyCounters();
-                        source.persist();
-                    });
+                    SourceSystem.streamAll()
+                            .map(s -> (SourceSystem) s)
+                            .forEach(source -> {
+                                source.resetDailyCounters();
+                                source.persist();
+                            });
 
                     monitoring.recordEvent("daily_reset", Map.of(
                             "node", nodeName,
@@ -377,7 +382,7 @@ public class FileIngestionRoute extends RouteBuilder {
 
         // Scheduled file processing for SCHEDULED strategy sources
         config.sources().stream()
-                .filter(s -> s.enabled() && s.readyStrategy() == SourceSystemConfig.FileReadyStrategy.SCHEDULED)
+                .filter(s -> s.enabled() && s.readyStrategy() == RelayConfiguration.FileReadyStrategy.SCHEDULED)
                 .forEach(source -> {
                     source.scheduledTime().ifPresent(scheduledTime -> {
                         String cronExpression = String.format("0 %d %d * * ?",
@@ -651,7 +656,7 @@ public class FileIngestionRoute extends RouteBuilder {
      * Get read lock age based on configuration.
      */
     private long getReadLockAge(RelayConfiguration.SourceSystem source) {
-        if (source.readyStrategy() == SourceSystemConfig.FileReadyStrategy.FILE_AGE) {
+        if (source.readyStrategy() == RelayConfiguration.FileReadyStrategy.FILE_AGE) {
             return source.stabilityPeriod().toMillis();
         }
         return 10000; // Default 10 seconds

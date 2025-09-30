@@ -67,9 +67,23 @@ public class FileDetectionService {
             case DONE_FILE -> Files.exists(
                     Paths.get(file.toString() + source.doneFileSuffix().orElse(".done"))
             );
-            case FILE_AGE -> isFileStable(file, Duration.ofMinutes(5));
+            case FILE_AGE -> isFileStable(file, source.stabilityPeriod());
             case IMMEDIATE -> true;
-            case SCHEDULED -> LocalTime.now().isAfter(LocalTime.of(6, 0)); // 6 AM
+            case SCHEDULED -> {
+                LocalTime now = LocalTime.now();
+                LocalTime scheduled = source.scheduledTime().orElse(LocalTime.of(6, 0));
+                yield now.isAfter(scheduled);
+            }
+            case CUSTOM -> false; // Add custom logic as needed
+            case NOT_LOCKED -> {
+                // Check if file is not locked
+                try (var ignored = Files.newByteChannel(file, StandardOpenOption.READ)) {
+                    yield true;
+                } catch (IOException e) {
+                    yield false;
+                }
+            }
+            default -> false; // Add default case
         };
     }
 
