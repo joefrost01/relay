@@ -13,9 +13,7 @@ import java.util.List;
 
 @ApplicationScoped
 @UnlessBuildProfile("dev")  // SQL Server implementation for prod/test
-public class SqlServerFileTransferRepository
-        extends PanacheRepository<FileTransfer>
-        implements FileTransferRepository {
+public class SqlServerFileTransferRepository implements PanacheRepository<FileTransfer>, FileTransferRepository {
 
     @ConfigProperty(name = "relay.node-name")
     String nodeName;

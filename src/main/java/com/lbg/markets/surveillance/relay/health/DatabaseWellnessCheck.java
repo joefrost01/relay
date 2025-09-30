@@ -5,6 +5,10 @@ import com.lbg.markets.surveillance.relay.model.TransferStatus;
 import com.lbg.markets.surveillance.relay.repository.FileTransferRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.health.HealthCheck;
+import org.eclipse.microprofile.health.HealthCheckResponse;
+import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
+import org.eclipse.microprofile.health.Readiness;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -15,7 +19,7 @@ import java.util.Map;
  * Custom wellness check for monitoring non-critical issues.
  */
 @ApplicationScoped
-@Wellness
+@Readiness
 class DatabaseWellnessCheck implements HealthCheck {
 
     @Inject

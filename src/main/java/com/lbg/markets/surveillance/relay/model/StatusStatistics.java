@@ -1,5 +1,6 @@
 package com.lbg.markets.surveillance.relay.model;
 
+import java.time.Duration;
 import java.util.List;
 
 /**

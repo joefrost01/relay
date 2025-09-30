@@ -1,12 +1,13 @@
 package com.lbg.markets.surveillance.relay.model;
+import jakarta.persistence.GenerationType;
 
-import com.lbg.markets.surveillance.relay.model.TransferStatus;
 import io.quarkus.Generated;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.PrePersist;
+
 
 import jakarta.persistence.*;
 import java.time.Instant;
@@ -70,7 +71,7 @@ public class FileTransfer extends PanacheEntity {
     public Integer retryCount = 0;
 
     @Column(name = "row_version", columnDefinition = "ROWVERSION")
-    @Generated(GenerationTime.ALWAYS)
+    @Version
     public byte[] rowVersion;
 
     @PrePersist
