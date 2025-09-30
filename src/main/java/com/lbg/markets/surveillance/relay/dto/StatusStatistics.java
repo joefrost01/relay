@@ -1,4 +1,7 @@
-package com.lbg.markets.surveillance.relay.model;
+package com.lbg.markets.surveillance.relay.dto;
+
+import com.lbg.markets.surveillance.relay.model.FileTransfer;
+import com.lbg.markets.surveillance.relay.model.TransferStatus;
 
 import java.time.Duration;
 import java.util.List;

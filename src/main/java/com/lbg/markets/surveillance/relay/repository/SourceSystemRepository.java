@@ -1,7 +1,7 @@
 package com.lbg.markets.surveillance.relay.repository;
 
 import com.lbg.markets.surveillance.relay.model.SourceSystem;
-import com.lbg.markets.surveillance.relay.model.SourceSystemStats;
+import com.lbg.markets.surveillance.relay.dto.SourceSystemStats;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;

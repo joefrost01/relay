@@ -1,4 +1,6 @@
-package com.lbg.markets.surveillance.relay.model;
+package com.lbg.markets.surveillance.relay.dto;
+
+import com.lbg.markets.surveillance.relay.model.SourceSystem;
 
 import java.time.Duration;
 import java.time.Instant;

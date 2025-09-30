@@ -13,6 +13,7 @@ import com.lbg.markets.surveillance.relay.model.SourceSystem;
 import com.lbg.markets.surveillance.relay.model.TransferStatus;
 import io.micrometer.core.instrument.*;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.Startup;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -21,6 +22,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -232,36 +235,6 @@ public class MonitoringService {
     }
 
     /**
-     * Start timing an operation.
-     */
-    public Timer.Sample startTimer() {
-        return Timer.start(meterRegistry);
-    }
-
-    /**
-     * Stop timing and record the duration.
-     */
-    public void recordTiming(Timer.Sample sample, String operation, String... tags) {
-        Timer timer = getOrCreateTimer("operation.duration",
-                concatenateTags("operation", operation, tags));
-        sample.stop(timer);
-    }
-
-    /**
-     * Record a gauge value.
-     */
-    public void recordGauge(String name, double value, String... tags) {
-        String key = name + Arrays.toString(tags);
-        gaugeValues.computeIfAbsent(key, k -> {
-            AtomicLong gaugeValue = new AtomicLong();
-            Gauge.builder(name, gaugeValue, AtomicLong::doubleValue)
-                    .tags(tags)
-                    .register(meterRegistry);
-            return gaugeValue;
-        }).set(Double.doubleToLongBits(value));
-    }
-
-    /**
      * Get current metrics snapshot.
      */
     public MetricsSnapshot getMetricsSnapshot() {
@@ -318,143 +291,6 @@ public class MonitoringService {
         return snapshot;
     }
 
-    /**
-     * Get transfer statistics for a time period.
-     */
-    public TransferStatistics getTransferStatistics(Duration period) {
-        Instant since = Instant.now().minus(period);
-
-        TransferStatistics stats = new TransferStatistics();
-        stats.period = period;
-        stats.startTime = since;
-        stats.endTime = Instant.now();
-
-        // Query transfer counts by status
-        Map<TransferStatus, Long> statusCounts = FileTransfer.stream(
-                        "createdAt >= ?1", since)
-                .collect(Collectors.groupingBy(
-                        t -> t.status,
-                        Collectors.counting()
-                ));
-        stats.byStatus = statusCounts;
-
-        // Query by source system
-        Map<String, Long> sourceCounts = FileTransfer.stream(
-                        "createdAt >= ?1", since)
-                .collect(Collectors.groupingBy(
-                        t -> t.sourceSystem,
-                        Collectors.counting()
-                ));
-        stats.bySource = sourceCounts;
-
-        // Calculate success rate
-        long completed = statusCounts.getOrDefault(TransferStatus.COMPLETED, 0L);
-        long failed = statusCounts.getOrDefault(TransferStatus.FAILED, 0L);
-        long total = completed + failed;
-        stats.successRate = total > 0 ? (double) completed / total * 100 : 100.0;
-
-        // Calculate throughput
-        long totalBytes = FileTransfer.stream(
-                        "status = ?1 and completedAt >= ?2",
-                        TransferStatus.COMPLETED, since)
-                .mapToLong(t -> t.fileSize != null ? t.fileSize : 0)
-                .sum();
-        stats.totalBytesTransferred = totalBytes;
-        stats.throughputMBps = totalBytes / (period.toSeconds() * 1024.0 * 1024.0);
-
-        // Processing time statistics
-        List<Long> processingTimes = FileTransfer.stream(
-                        "status = ?1 and completedAt >= ?2 and startedAt is not null",
-                        TransferStatus.COMPLETED, since)
-                .map(t -> Duration.between(t.startedAt, t.completedAt).toMillis())
-                .collect(Collectors.toList());
-
-        if (!processingTimes.isEmpty()) {
-            stats.avgProcessingTimeMs = processingTimes.stream()
-                    .mapToLong(Long::longValue)
-                    .average()
-                    .orElse(0);
-            stats.minProcessingTimeMs = processingTimes.stream()
-                    .mapToLong(Long::longValue)
-                    .min()
-                    .orElse(0);
-            stats.maxProcessingTimeMs = processingTimes.stream()
-                    .mapToLong(Long::longValue)
-                    .max()
-                    .orElse(0);
-        }
-
-        return stats;
-    }
-
-    /**
-     * Generate SLA report.
-     */
-    public SlaReport generateSlaReport(LocalDate date) {
-        SlaReport report = new SlaReport();
-        report.date = date;
-        report.node = nodeName;
-
-        Instant dayStart = date.atStartOfDay().toInstant(ZoneOffset.UTC);
-        Instant dayEnd = date.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
-
-        // Check each source system
-        report.sourceSlaStatus = new HashMap<>();
-
-        for (SourceSystem source : SourceSystem.<SourceSystem>listAll()) {
-            if (!source.enabled) continue;
-
-            SlaStatus slaStatus = new SlaStatus();
-            slaStatus.sourceSystem = source.systemId;
-
-            // Check if files were received on time
-            if (source.expectedNextFile != null) {
-                slaStatus.expectedTime = source.expectedNextFile;
-                slaStatus.actualTime = source.lastFileReceived;
-
-                if (source.lastFileReceived != null) {
-                    Duration delay = Duration.between(
-                            source.expectedNextFile,
-                            source.lastFileReceived
-                    );
-                    slaStatus.delayMinutes = delay.toMinutes();
-                    slaStatus.metSla = delay.toMinutes() <= 30; // 30-minute grace period
-                } else {
-                    slaStatus.metSla = false;
-                }
-            }
-
-            // Calculate daily statistics
-            long dailyCount = FileTransfer.count(
-                    "sourceSystem = ?1 and createdAt >= ?2 and createdAt < ?3",
-                    source.systemId, dayStart, dayEnd
-            );
-            slaStatus.filesProcessed = dailyCount;
-
-            long failedCount = FileTransfer.count(
-                    "sourceSystem = ?1 and status = ?2 and createdAt >= ?3 and createdAt < ?4",
-                    source.systemId, TransferStatus.FAILED, dayStart, dayEnd
-            );
-            slaStatus.filesFailed = failedCount;
-
-            slaStatus.successRate = dailyCount > 0
-                    ? (double) (dailyCount - failedCount) / dailyCount * 100
-                    : 100.0;
-
-            report.sourceSlaStatus.put(source.systemId, slaStatus);
-        }
-
-        // Overall SLA compliance
-        long totalSources = report.sourceSlaStatus.size();
-        long metSla = report.sourceSlaStatus.values().stream()
-                .filter(s -> s.metSla)
-                .count();
-        report.overallSlaCompliance = totalSources > 0
-                ? (double) metSla / totalSources * 100
-                : 100.0;
-
-        return report;
-    }
 
     /**
      * Send an alert.
@@ -501,20 +337,6 @@ public class MonitoringService {
         }
     }
 
-    /**
-     * Clear an active alert.
-     */
-    public void clearAlert(String alertType) {
-        AlertState alert = activeAlerts.remove(alertType);
-        if (alert != null) {
-            alert.clearedAt = Instant.now();
-
-            recordEvent("alert_cleared", Map.of(
-                    "alert_type", alertType,
-                    "duration_minutes", Duration.between(alert.triggeredAt, alert.clearedAt).toMinutes()
-            ));
-        }
-    }
 
     // ============ Private Methods ============
 
@@ -538,7 +360,11 @@ public class MonitoringService {
             config.notifications().ifPresent(notif -> {
                 notif.pubsubTopic().ifPresent(topic -> {
                     TopicName topicName = TopicName.parse(topic);
-                    pubsubPublisher = Publisher.newBuilder(topicName).build();
+                    try {
+                        pubsubPublisher = Publisher.newBuilder(topicName).build();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     Log.infof("Initialized Pub/Sub publisher for topic: %s", topic);
                 });
             });
@@ -795,7 +621,7 @@ public class MonitoringService {
             String errorType = (String) data.get("error_type");
 
             // Count recent errors
-            long recentErrors = Counter.builder("recent.errors")
+            double recentErrors = Counter.builder("recent.errors")
                     .tag("type", errorType)
                     .register(meterRegistry)
                     .count();

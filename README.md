@@ -19,7 +19,7 @@ A high-performance, enterprise-grade file transfer orchestration system built wi
 
 ### Purpose
 
-Relay is a mission-critical data pipeline component for LBG Markets Surveillance, responsible for:
+Relay is a mission-critical application, responsible for:
 
 1. **Automated File Detection**: Continuously monitoring multiple source systems for new files
 2. **Reliable Transfer**: Streaming files to Google Cloud Storage with retry logic and fault tolerance
@@ -64,30 +64,30 @@ The application embodies several key principles:
 ┌─────────────────────────────────────────────────────────────┐
 │                  Relay Application                          │
 │                                                             │
-│  ┌──────────────┐    ┌──────────────┐    ┌─────────────┐  │
-│  │   File       │───▶│  Transfer    │───▶│   GCS       │  │
-│  │  Detection   │    │ Orchestrator │    │  Streaming  │  │
-│  │  (Camel)     │    │ (Queue/Pool) │    │  Service    │  │
-│  └──────────────┘    └──────────────┘    └─────────────┘  │
+│  ┌──────────────┐    ┌──────────────┐    ┌─────────────┐    │
+│  │   File       │───▶│  Transfer    │───▶│   GCS       │    │
+│  │  Detection   │    │ Orchestrator │    │  Streaming  │    │
+│  │  (Camel)     │    │ (Queue/Pool) │    │  Service    │    │
+│  └──────────────┘    └──────────────┘    └─────────────┘    │
 │         │                    │                    │         │
 │         ▼                    ▼                    ▼         │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │            SQL Server Database                       │  │
-│  │  (FileTransfer, SourceSystem, StatusHistory)        │  │
-│  └──────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │            SQL Server Database                       │   │
+│  │  (FileTransfer, SourceSystem, StatusHistory)         │   │
+│  └──────────────────────────────────────────────────────    │
 │                                                             │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │         Monitoring & Metrics Service                 │  │
-│  └──────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │         Monitoring & Metrics Service                 │   │
+│  └──────────────────────────────────────────────────────┘   │
 └──────────────────────┬──────────────────────────────────────┘
                        │
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
 │              External Services                              │
-│  ┌─────────────┐  ┌──────────┐  ┌────────────────────┐    │
-│  │    GCS      │  │ BigQuery │  │ Prometheus/Grafana │    │
-│  │  (Storage)  │  │(Analytics)│  │   (Monitoring)     │    │
-│  └─────────────┘  └──────────┘  └────────────────────┘    │
+│  ┌─────────────┐  ┌───────────┐  ┌────────────────────┐     │
+│  │    GCS      │  │ BigQuery  │  │ Prometheus/Grafana │     │
+│  │  (Storage)  │  │(Analytics)│  │   (Monitoring)     │     │
+│  └─────────────┘  └───────────┘  └────────────────────┘     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
