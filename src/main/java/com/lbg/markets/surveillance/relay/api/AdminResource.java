@@ -6,7 +6,7 @@ import com.lbg.markets.surveillance.relay.model.FileTransfer;
 import com.lbg.markets.surveillance.relay.repository.FileTransferRepository;
 import com.lbg.markets.surveillance.relay.service.FileDetectionService;
 import com.lbg.markets.surveillance.relay.service.MonitoringService;
-import com.lbg.markets.surveillance.relay.service.TransferOrchestrator;
+import com.lbg.markets.surveillance.relay.service.TransferService;
 import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
@@ -37,7 +37,7 @@ public class AdminResource {
     @Inject
     MonitoringService monitoring;
     @Inject
-    TransferOrchestrator orchestrator;
+    TransferService orchestrator;
     @Inject
     FileDetectionService detectionService;
     @Inject

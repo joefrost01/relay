@@ -1,0 +1,63 @@
+CREATE TABLE file_transfers (
+                                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                                source_system VARCHAR(100) NOT NULL,
+                                filename VARCHAR(255) NOT NULL,
+                                file_path VARCHAR(500) NOT NULL,
+                                file_size BIGINT,
+                                file_hash VARCHAR(64),
+                                gcs_path VARCHAR(500),
+                                status VARCHAR(50) NOT NULL,
+                                processing_node VARCHAR(100),
+                                created_at TIMESTAMP NOT NULL,
+                                started_at TIMESTAMP,
+                                completed_at TIMESTAMP,
+                                error_message TEXT,
+                                retry_count INT DEFAULT 0,
+                                row_version BIGINT DEFAULT 1,
+                                INDEX idx_status_created (status, created_at),
+                                INDEX idx_source_file (source_system, filename),
+                                UNIQUE KEY uk_source_file (source_system, filename)
+);
+
+CREATE TABLE source_systems (
+                                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                                system_id VARCHAR(100) UNIQUE NOT NULL,
+                                display_name VARCHAR(200),
+                                current_path VARCHAR(500) NOT NULL,
+                                enabled BOOLEAN DEFAULT TRUE,
+                                priority INT DEFAULT 5,
+                                status VARCHAR(50) NOT NULL,
+                                health_status VARCHAR(50) NOT NULL,
+                                last_scan_time TIMESTAMP,
+                                last_file_received TIMESTAMP,
+                                last_filename VARCHAR(255),
+                                expected_next_file TIMESTAMP,
+                                files_today INT DEFAULT 0,
+                                total_files BIGINT DEFAULT 0,
+                                total_bytes BIGINT DEFAULT 0,
+                                successful_transfers BIGINT DEFAULT 0,
+                                failed_transfers BIGINT DEFAULT 0,
+                                consecutive_errors INT DEFAULT 0,
+                                avg_processing_time_ms BIGINT,
+                                last_error TEXT,
+                                last_error_time TIMESTAMP,
+                                config_version VARCHAR(64),
+                                metadata TEXT,
+                                created_at TIMESTAMP NOT NULL,
+                                updated_at TIMESTAMP,
+                                version BIGINT DEFAULT 1,
+                                INDEX idx_system_id (system_id)
+);
+
+CREATE TABLE transfer_status_history (
+                                         id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                                         transfer_id BIGINT NOT NULL,
+                                         from_status VARCHAR(50),
+                                         to_status VARCHAR(50) NOT NULL,
+                                         changed_at TIMESTAMP NOT NULL,
+                                         changed_by VARCHAR(100),
+                                         reason VARCHAR(500),
+                                         node_name VARCHAR(100),
+                                         INDEX idx_transfer_id (transfer_id),
+                                         FOREIGN KEY (transfer_id) REFERENCES file_transfers(id)
+);

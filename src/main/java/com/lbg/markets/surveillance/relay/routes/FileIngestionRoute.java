@@ -7,7 +7,7 @@ import com.lbg.markets.surveillance.relay.model.SourceSystem;
 import com.lbg.markets.surveillance.relay.repository.FileTransferRepository;
 import com.lbg.markets.surveillance.relay.service.FileDetectionService;
 import com.lbg.markets.surveillance.relay.service.MonitoringService;
-import com.lbg.markets.surveillance.relay.service.TransferOrchestrator;
+import com.lbg.markets.surveillance.relay.service.TransferService;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -45,7 +45,7 @@ public class FileIngestionRoute extends RouteBuilder {
     @Inject
     FileDetectionService detectionService;
     @Inject
-    TransferOrchestrator orchestrator;
+    TransferService orchestrator;
     @Inject
     MonitoringService monitoring;
     @Inject
@@ -250,7 +250,7 @@ public class FileIngestionRoute extends RouteBuilder {
                     String sourceSystem = exchange.getIn().getHeader("SourceSystem", String.class);
 
                     // Queue for processing
-                    orchestrator.queueTransfer(transferId);
+                    orchestrator.processTransfer(repository.findById(transferId));
 
                     // Record metrics
                     monitoring.recordEvent("file_queued", Map.of(
@@ -635,7 +635,7 @@ public class FileIngestionRoute extends RouteBuilder {
                     .filter(path -> !isAlreadyProcessed(source.id(), path.getFileName().toString()))
                     .forEach(path -> {
                         FileTransfer transfer = registerFile(source.id(), path);
-                        orchestrator.queueTransfer(transfer.id);
+                        orchestrator.processTransfer(transfer);
                     });
 
         } catch (Exception e) {

@@ -1,6 +1,6 @@
 package com.lbg.markets.surveillance.relay.service;
 
-import com.lbg.markets.surveillance.relay.config.SourceConfig;
+import com.lbg.markets.surveillance.relay.config.RelayConfiguration;
 import com.lbg.markets.surveillance.relay.repository.FileTransferRepository;
 import com.lbg.markets.surveillance.relay.repository.SourceSystemRepository;
 import io.quarkus.logging.Log;
@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
@@ -21,7 +22,7 @@ import java.util.HexFormat;
 public class FileDetectionService {
 
     @Inject
-    SourceConfig config;
+    RelayConfiguration config;  // Use RelayConfiguration instead of SourceConfig
 
     @Inject
     FileTransferRepository transferRepository;
@@ -31,25 +32,17 @@ public class FileDetectionService {
 
     @Scheduled(every = "30s")
     void scanSources() {
-        config.sources().stream()  // FIXED - use sources() not getSources()
-                .filter(source -> source.enabled())  // FIXED
+        config.sources().stream()
+                .filter(RelayConfiguration.SourceSystem::enabled)
                 .forEach(this::scanSource);
     }
 
-    // Add this method for compatibility with existing code
-    public void scanSourceSystem(com.lbg.markets.surveillance.relay.config.RelayConfiguration.SourceSystem source) {
-        // Convert to simple source scan
-        try {
-            Path sourcePath = Paths.get(source.path());
-            if (Files.exists(sourcePath)) {
-                scanPath(source.id(), sourcePath, source.filePattern());
-            }
-        } catch (Exception e) {
-            Log.errorf(e, "Failed to scan source system: %s", source.id());
-        }
+    // Keep this method for compatibility with existing code
+    public void scanSourceSystem(RelayConfiguration.SourceSystem source) {
+        scanSource(source);
     }
 
-    private void scanSource(SourceConfig.Source source) {
+    private void scanSource(RelayConfiguration.SourceSystem source) {
         try {
             Path sourcePath = Paths.get(source.path());
             if (!Files.exists(sourcePath)) {
@@ -57,33 +50,38 @@ public class FileDetectionService {
                 return;
             }
 
-            scanPath(source.id(), sourcePath, source.filePattern());
+            scanPath(source, sourcePath);
 
         } catch (Exception e) {
             Log.errorf(e, "Failed to scan source: %s", source.id());
         }
     }
 
-    private void scanPath(String sourceId, Path path, String pattern) throws IOException {
+    private void scanPath(RelayConfiguration.SourceSystem source, Path path) throws IOException {
         PathMatcher matcher = FileSystems.getDefault()
-                .getPathMatcher("glob:" + pattern);
+                .getPathMatcher("glob:" + source.filePattern());
 
         Files.walkFileTree(path, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (matcher.matches(file.getFileName())) {
-                    registerFile(sourceId, file);
+                    if (isFileReady(file, source)) {
+                        registerFile(source.id(), file);
+                    }
                 }
                 return FileVisitResult.CONTINUE;
             }
         });
     }
 
-    private boolean isFileReady(Path file, SourceConfig.Source source) {
+    private boolean isFileReady(Path file, RelayConfiguration.SourceSystem source) {
         return switch (source.readyStrategy()) {
-            case "IMMEDIATE" -> true;
-            case "DONE_FILE" -> Files.exists(Paths.get(file + ".done"));
-            case "FILE_AGE" -> {
+            case IMMEDIATE -> true;
+            case DONE_FILE -> {
+                String doneFileSuffix = source.doneFileSuffix().orElse(".done");
+                yield Files.exists(Paths.get(file + doneFileSuffix));
+            }
+            case FILE_AGE -> {
                 try {
                     var attrs = Files.readAttributes(file, BasicFileAttributes.class);
                     var age = Duration.between(attrs.lastModifiedTime().toInstant(), Instant.now());
@@ -91,6 +89,32 @@ public class FileDetectionService {
                 } catch (IOException e) {
                     yield false;
                 }
+            }
+            case SCHEDULED -> {
+                // Check if within scheduled window
+                if (source.scheduledTime().isPresent()) {
+                    var now = java.time.LocalTime.now();
+                    var scheduled = source.scheduledTime().get();
+                    var windowEnd = scheduled.plusMinutes(30);
+                    yield now.isAfter(scheduled) && now.isBefore(windowEnd);
+                }
+                yield false;
+            }
+            case NOT_LOCKED -> {
+                // Try to check if file is locked
+                try {
+                    // Try to open file for writing to check if locked
+                    try (var channel = FileChannel.open(file, StandardOpenOption.WRITE)) {
+                        yield true;
+                    }
+                } catch (IOException e) {
+                    // File is locked
+                    yield false;
+                }
+            }
+            case CUSTOM -> {
+                // Custom logic - default to true for now
+                yield true;
             }
             default -> false;
         };
@@ -124,7 +148,7 @@ public class FileDetectionService {
         }
     }
 
-    public String calculateHash(Path file) throws IOException {  // CHANGED to public
+    public String calculateHash(Path file) throws IOException {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] bytes = Files.readAllBytes(file);

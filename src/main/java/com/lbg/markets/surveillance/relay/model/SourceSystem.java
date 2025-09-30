@@ -15,21 +15,6 @@ import java.util.Optional;
  */
 @Entity
 @Table(name = "source_systems")
-@NamedQueries({
-        @NamedQuery(
-                name = "SourceSystem.findEnabled",
-                query = "SELECT s FROM SourceSystem s WHERE s.enabled = true ORDER BY s.priority"
-        ),
-        @NamedQuery(
-                name = "SourceSystem.findByPriority",
-                query = "SELECT s FROM SourceSystem s WHERE s.enabled = true ORDER BY s.priority, s.systemId"
-        ),
-        @NamedQuery(
-                name = "SourceSystem.findOverdue",
-                query = "SELECT s FROM SourceSystem s WHERE s.enabled = true " +
-                        "AND s.expectedNextFile < :now AND s.lastFileReceived < :cutoff"
-        )
-})
 public class SourceSystem extends PanacheEntity {
 
     /**

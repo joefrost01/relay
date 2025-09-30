@@ -1,43 +1,93 @@
 relay:
+  node-name: ${HOSTNAME:relay-dev}
+
+  orchestrator:
+    enabled: true
+    worker-threads: 5
+    queue-capacity: 100
+    max-concurrent-per-source: 3
+    processing-timeout-minutes: 30
+    max-retries: 3
+
+  monitoring:
+    enabled: true
+    big-query-dataset: ${BQ_DATASET:}
+    events-table: transfer_events
+    reprocess-table: reprocess_requests
+
   sources:
     - id: trading_system
       path: ./test-data/trading
       file-pattern: "*.csv"
       ready-strategy: IMMEDIATE
-      stability-period: 5m
-      poll-interval: 30s
+      poll-interval: PT30S
       enabled: true
+      processing:
+        priority: 1
+        max-concurrent: 3
 
     - id: risk_system
       path: ./test-data/risk
       file-pattern: "*.xml"
       ready-strategy: FILE_AGE
-      stability-period: 2m
-      poll-interval: 30s
+      stability-period: PT2M
+      poll-interval: PT30S
       enabled: true
-
-  storage:
-    local:
-      path: ./target/storage
+      processing:
+        priority: 2
+        max-concurrent: 2
 
   gcs:
-    bucket: ${GCS_BUCKET:surveillance-data}
-    project-id: ${GCP_PROJECT:lbg-surveillance}
+    bucket: ${GCS_BUCKET:local-storage}
+    project-id: ${GCP_PROJECT:local-dev}
+    emulator-host: ${GCS_EMULATOR:}
+    upload-buffer-size: 8388608
+    upload-timeout: PT30M
+    resumable-upload: false  # Disable for local dev
 
 quarkus:
   datasource:
     db-kind: h2
     jdbc:
-      url: jdbc:h2:file:./target/relay-db
+      url: jdbc:h2:mem:relay;DB_CLOSE_DELAY=-1
 
   hibernate-orm:
     database:
-      generation: update
+      generation: drop-and-create
 
----
+  flyway:
+    migrate-at-start: false  # Disable for H2
+
+  scheduler:
+    enabled: true
+
+# Dev profile
+"%dev":
+  relay:
+    monitoring:
+      enabled: false  # Disable BigQuery/PubSub in dev
+    gcs:
+      emulator-host: localhost:8089  # Use fake-gcs-server
+
+# Test profile
+"%test":
+  relay:
+    orchestrator:
+      enabled: false
+    monitoring:
+      enabled: false
+
+# Prod profile
 "%prod":
   quarkus:
     datasource:
       db-kind: mssql
       jdbc:
         url: jdbc:sqlserver://${DB_HOST}:1433;databaseName=${DB_NAME}
+        username: ${DB_USER}
+        password: ${DB_PASSWORD}
+
+  relay:
+    monitoring:
+      enabled: true
+      big-query-dataset: ${BQ_DATASET:relay_monitoring}

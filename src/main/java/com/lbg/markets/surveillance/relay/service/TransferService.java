@@ -102,7 +102,7 @@ public class TransferService {
 
         repository.persist(transfer);
 
-        metrics.recordError("transfer_failed", transfer.sourceSystem, error.getMessage());
+        metrics.recordTransferFailed(transfer.sourceSystem,error.getMessage());
         Log.errorf(error, "Transfer failed: %d", transfer.id);
     }
 
